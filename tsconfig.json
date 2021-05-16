@@ -1,0 +1,18 @@
+//* https://www.staging-typescript.org/tsconfig
+
+{
+  "compilerOptions": {
+    "strict": true /* Enable all strict type-checking options. */,
+    "moduleResolution": "node", // node
+    "module": "CommonJS" /* Specify module code generation: 'none', 'commonjs', 'amd', 'system', 'umd', 'es2015', 'es2020', or 'ESNext'. */,
+    "target": "ES5" /* Specify ECMAScript target version: 'ES3' (default), 'ES5', 'ES2015', 'ES2016', 'ES2017', 'ES2018', 'ES2019', 'ES2020', or 'ESNEXT'. */,
+    "outDir": "./dist" /* Redirect output structure to the directory. */,
+    "rootDir": "./src" /* Specify the root directory of input files. Use to control the output directory structure with --outDir. */
+    // "allowJs": true, // 컴파일 타겟에 js 파일이 존재할 떄
+    // "checkJs": true, // 컴파일 타겟에 js 파일이 존재할 떄
+    // "sourceMap": true /* Generates corresponding '.map' file. : map file 안에서는 컴파일된 코드와 ts를 연결한다. (디버깅용 - 브라우저 디버깅에서 확인할 수 있다.) */,
+    // "composite": true /* Enable project compilation */ // 이전에 빌드된 정보를 기억하여 다음에 더 빠르게 빌드할 수 있도록 도와준다.
+  },
+  // "include": [""] /* 컴파일할 것들 */,
+  "exclude": [""] /* 컴파일에 제외할 것들 */
+}

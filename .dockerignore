@@ -1,0 +1,12 @@
+src
+tsconfig.json
+
+.git/
+.gitignore
+**/.gitkeep
+**/.DS_Store
+.dockerignore
+Dockerfile
+docker-compose.yml
+node_modules/
+README.md
