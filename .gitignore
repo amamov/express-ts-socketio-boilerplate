@@ -2,6 +2,7 @@
 .idea
 .DS_Store
 db_data
+dist
 
 # Logs
 logs
