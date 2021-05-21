@@ -1,9 +1,29 @@
 import { Router } from "express";
+import { jwtAccess, onlyPrivate, onlyPublic } from "../controller/auth";
 
-const router: Router = Router();
+const router = Router();
 
 router.get("/", (req, res) => {
-  res.json({ hello: "express!!" });
+  res.send({ hello: "world" });
+});
+
+router.get("/favicon.ico", (req, res) => {
+  res.status(200).send("favicon");
+});
+
+router.get("/test/jwt", jwtAccess, (req, res) => {
+  console.log(req.user);
+  res.send({ status: true, message: "success token access" });
+});
+
+router.get("/test/private", onlyPrivate, (req, res) => {
+  console.log(req.user);
+  res.send({ status: true, message: "success token access" });
+});
+
+router.get("/test/public", onlyPublic, (req, res) => {
+  console.log(req.user);
+  res.send({ status: true, message: "success token access" });
 });
 
 export default router;

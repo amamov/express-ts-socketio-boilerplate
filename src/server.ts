@@ -1,30 +1,23 @@
-import * as dotenv from "dotenv";
-dotenv.config({ path: `${__dirname}/../../.env` });
-
+import "./global";
+import config from "./global/env";
+import * as express from "express";
 import * as http from "http";
 import * as path from "path";
-import * as express from "express";
-import * as morgan from "morgan";
 import * as cors from "cors";
+import * as hpp from "hpp";
+import * as helmet from "helmet";
+import * as morgan from "morgan";
+import * as mongoose from "mongoose";
 import * as cookieParser from "cookie-parser";
 import * as session from "express-session";
-import * as hpp from "hpp";
+import * as redisConnector from "connect-redis";
+import * as redis from "redis";
 import * as passport from "passport";
-import * as helmet from "helmet";
+import passportConfig from "./passport";
 import indexRoute from "./routes/index";
-
-const prod: boolean = process.env.NODE_ENV === "production";
-
-class HttpException extends Error {
-  public status: number;
-  public message: string;
-
-  constructor(status: number, message: string) {
-    super(message);
-    this.status = status;
-    this.message = message;
-  }
-}
+import usersRoute from "./routes/users";
+import exception from "./middlewares/exception";
+import notFound from "./middlewares/notFound";
 
 class Server extends http.Server {
   public app: express.Application;
@@ -35,34 +28,39 @@ class Server extends http.Server {
     this.app = app;
   }
 
-  private setAuth() {
-    const SECRET: string = process.env.COOKIE_SECRET || "";
-    this.app.use(cookieParser(SECRET));
-    this.app.use(
-      session({
-        resave: false,
-        saveUninitialized: false,
-        secret: SECRET,
-        cookie: {
-          httpOnly: true,
-          secure: false, // https -> true
-          domain: prod ? ".amamov.co" : undefined,
-        },
-        name: "se",
-      })
-    );
+  private setPassport() {
+    passportConfig();
     this.app.use(passport.initialize());
     this.app.use(passport.session());
   }
 
-  private setDatabase() {}
+  private async setDatabase() {
+    const mongodbOptions = {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      useCreateIndex: true,
+      useFindAndModify: false,
+    };
+    try {
+      await mongoose.connect(config.MONGO_URL, mongodbOptions);
+      if (config.PRODUCTION) {
+        mongoose.set("debug", true);
+      }
+      console.log("✅ Connected to DB");
+    } catch (err) {
+      console.log(`❌ Error on DB Connection:${err}`);
+    }
+  }
 
   private setRouter() {
     this.app.use("/", indexRoute);
+    this.app.use("/users", usersRoute);
+    this.app.use(notFound);
+    this.app.use(exception);
   }
 
   private setMiddleware() {
-    if (prod) {
+    if (config.PRODUCTION) {
       this.app.use(hpp());
       this.app.use(helmet());
       this.app.use(morgan("combined"));
@@ -72,55 +70,64 @@ class Server extends http.Server {
           credentials: true,
         })
       );
+      const RedisStore = redisConnector(session);
+      const redisClient = redis.createClient({
+        url: `redis://${config.REDIS_HOST}:${config.REDIS_PORT}`,
+        password: config.REDIS_PASSWORD,
+      });
+      redisClient.on("error", (error) => {
+        console.error(error);
+      });
+      this.app.use(
+        session({
+          resave: false,
+          saveUninitialized: false,
+          secret: config.COOKIE_SECRET,
+          cookie: {
+            httpOnly: true,
+            secure: true,
+          },
+          name: "sid",
+          store: new RedisStore({ client: redisClient, logErrors: true }),
+        })
+      );
     } else {
       this.app.use(morgan("dev"));
+      // res.setHeader("Access-Control-Allow-Origin", "http://client.co")
       this.app.use(
         cors({
           origin: true,
-          credentials: true,
+          credentials: false,
+        })
+      );
+      this.app.use(
+        session({
+          resave: false,
+          saveUninitialized: false,
+          secret: config.COOKIE_SECRET,
+          cookie: {
+            httpOnly: true,
+            secure: false,
+          },
+          name: "sid",
         })
       );
     }
-    this.app.use("/", express.static(path.join(__dirname, "uploads")));
+
+    this.app.use("/static", express.static(path.join(__dirname, "assets")));
+    this.app.use("/media", express.static(path.join(__dirname, "uploads")));
+    this.app.use(cookieParser(config.COOKIE_SECRET));
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
-    this.setAuth();
-
+    this.setPassport();
     this.setRouter();
-
-    // 404
-    this.app.use(
-      (
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction
-      ) => {
-        const error = new Error(`Not found ${req.method} ${req.url} `);
-        const exception: HttpException = new HttpException(404, error.message);
-        next(exception);
-      }
-    );
-
-    // exception middleware
-    this.app.use(
-      (
-        err: HttpException,
-        req: express.Request,
-        res: express.Response,
-        next: express.NextFunction
-      ) => {
-        console.error(err);
-        res.locals.error = process.env.NODE_ENV !== "production" ? err : {};
-        res.send(`${err.status} : ${err.message}`);
-      }
-    );
   }
 
   async start() {
-    this.app.set("port", process.env.PORT || 5000);
+    this.app.set("port", config.PORT);
     this.setDatabase();
     this.setMiddleware();
-    this.app.listen(this.app.get("port"), () => {
+    return this.app.listen(this.app.get("port"), () => {
       console.log(`server : http://localhost:${this.app.get("port")}`);
     });
   }
