@@ -9,12 +9,15 @@ import {
   onlyPrivate,
   onlyPublic,
 } from "../controller/auth";
-import { allUser, signup } from "../controller/users";
+import { allUser, me, signup } from "../controller/users";
 
 const router = Router();
 
 //* test route
 router.get("/", onlyPrivate, allUser);
+
+//* me
+router.get("/me", me);
 
 //* signup
 router.post("/", onlyPublic, signup);

@@ -18,12 +18,12 @@ router.get("/test/jwt", jwtAccess, (req, res) => {
 
 router.get("/test/private", onlyPrivate, (req, res) => {
   console.log(req.user);
-  res.send({ status: true, message: "success token access" });
+  res.send({ status: true, message: "private" });
 });
 
 router.get("/test/public", onlyPublic, (req, res) => {
   console.log(req.user);
-  res.send({ status: true, message: "success token access" });
+  res.send({ status: true, message: "public" });
 });
 
 export default router;

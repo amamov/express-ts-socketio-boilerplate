@@ -21,4 +21,13 @@ export const userSchema = new Schema<IUserDocument, IUserModel>(
   { timestamps: true }
 );
 
+userSchema.method({
+  read: function () {
+    return {
+      uuid: this._id,
+      username: this.username,
+    };
+  },
+});
+
 export default model<IUserDocument, IUserModel>("user", userSchema);

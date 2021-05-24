@@ -97,7 +97,7 @@ class Server extends http.Server {
       this.app.use(
         cors({
           origin: true,
-          credentials: false,
+          credentials: true,
         })
       );
       this.app.use(

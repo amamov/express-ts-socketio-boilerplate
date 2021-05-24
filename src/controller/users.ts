@@ -3,6 +3,16 @@ import { Request, Response, NextFunction } from "express";
 import * as bcrypt from "bcrypt";
 import User, { IUserDocument } from "../schema/User";
 
+export const me = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.isAuthenticated()) {
+    res.status(200).send({ success: false });
+  } else {
+    console.log(req.user.toJSON());
+    const user = req.user.toJSON();
+    res.status(200).send({ success: true, user });
+  }
+};
+
 export const allUser = async (
   req: Request,
   res: Response,
@@ -35,7 +45,13 @@ export const signup = async (
     const user = new User({ username, password: hashedPassword, age });
     await user.save();
     // const user = await User.register({ username, age } as IUser, password);
-    res.status(201).send({ success: true, user });
+    return req.login(user, async (loginError) => {
+      if (loginError) {
+        console.error(loginError);
+        return next(loginError);
+      }
+      return res.status(201).send({ success: true, user });
+    });
   } catch (error) {
     next(error);
   }
