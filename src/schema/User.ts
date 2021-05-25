@@ -62,6 +62,18 @@ userSchema.post(
   }
 );
 
+userSchema.post(
+  "update",
+  (error: any, doc: Document, next: (err?: NativeError) => void) => {
+    if (error.name === "MongoError" && error.code === 11000) {
+      //* unique error handling
+      next(new Error("That user already exists."));
+    } else {
+      next();
+    }
+  }
+);
+
 userSchema.virtual("readonly").get(function (this: IUserDocument) {
   return {
     _id: this._id,
