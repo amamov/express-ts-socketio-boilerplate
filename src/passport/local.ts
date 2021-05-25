@@ -1,27 +1,28 @@
 import * as bcrypt from "bcrypt";
 import * as passport from "passport";
 import { IStrategyOptions, Strategy, VerifyFunction } from "passport-local";
-import User, { IUser } from "../schema/User";
+import User from "../schema/User";
 
 const options: IStrategyOptions = {
-  usernameField: "username",
+  usernameField: "email",
   passwordField: "password",
 };
 
-const verify: VerifyFunction = async (username, password, done) => {
+const verify: VerifyFunction = async (email, password, done) => {
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (user !== null) {
       const result: boolean = await bcrypt.compare(password, user.password);
       if (result) {
         return done(null, user);
       } else {
-        console.log("hello world!");
         return done(null, false, { message: "bad password" });
       }
     } else {
       // server error, success, client error
-      return done(null, false, { message: "not found user" });
+      return done(null, false, {
+        message: "Please check your email and password.",
+      });
     }
   } catch (error) {
     console.error(error);

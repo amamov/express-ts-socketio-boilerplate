@@ -1,15 +1,16 @@
-import config from "../global/env";
 import { Request, Response, NextFunction } from "express";
 import * as bcrypt from "bcrypt";
-import User, { IUserDocument } from "../schema/User";
+import User from "../schema/User";
 
 export const me = (req: Request, res: Response, next: NextFunction) => {
   if (!req.isAuthenticated()) {
     res.status(200).send({ success: false });
   } else {
-    console.log(req.user.toJSON());
-    const user = req.user.toJSON();
-    res.status(200).send({ success: true, user });
+    const user = req.user;
+    res.status(200).send({
+      success: true,
+      user: user.readonly,
+    });
   }
 };
 
@@ -19,7 +20,7 @@ export const allUser = async (
   next: NextFunction
 ) => {
   try {
-    const users = await User.find({});
+    const users = await User.find({}).select("_id email username");
     res.status(200).send({ success: true, users });
   } catch (error) {
     next(error);
@@ -32,27 +33,29 @@ export const signup = async (
   next: NextFunction
 ) => {
   type body = {
+    email: string;
     username: string;
     password: string;
-    age?: number;
   };
   try {
-    const { username, password, age }: body = req.body;
-    if (!username || !password) {
-      throw new Error("username and password are reqiured");
+    const { email, username, password }: body = req.body;
+    if (!email || !username || !password) {
+      throw new Error("email, username and password are reqiured");
     }
-    const hashedPassword = await bcrypt.hash(password, 10); // 비밀먼호 암호화
-    const user = new User({ username, password: hashedPassword, age });
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = new User({ email, username, password: hashedPassword });
     await user.save();
-    // const user = await User.register({ username, age } as IUser, password);
-    return req.login(user, async (loginError) => {
+    req.login(user, async (loginError) => {
       if (loginError) {
         console.error(loginError);
         return next(loginError);
       }
-      return res.status(201).send({ success: true, user });
+      return res.status(201).send({ success: true, user: user.readonly });
     });
   } catch (error) {
+    if (error.errors) {
+      return res.status(400).send({ success: false, error: error.errors });
+    }
     next(error);
   }
 };

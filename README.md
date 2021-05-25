@@ -27,7 +27,7 @@ REDIS_PASSWORD="1205"
 
 ## TODO
 
-- [] csrf token 연결
-- [] dev용 mongodb docker-compose 연결
-- [] adminbro를 통한 admin site 생성
-- [] swagger ui 설정
+- [ ] csrf token 연결
+- [ ] dev용 mongodb docker-compose 연결
+- [ ] adminbro를 통한 admin site 생성
+- [ ] swagger ui 설정

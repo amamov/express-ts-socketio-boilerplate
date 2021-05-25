@@ -8,7 +8,7 @@ const exception = (
   next: express.NextFunction
 ) => {
   console.error(err);
-  res.status(404).send({ status: false, message: err.message });
+  res.status(404).send({ status: false, error: err.message });
 };
 
 export default exception;

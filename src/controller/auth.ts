@@ -19,12 +19,12 @@ export const localLogin = async (
       console.error(clientError);
       return next(clientError);
     }
-    return req.login(user, async (loginError) => {
+    req.login(user, async (loginError) => {
       if (loginError) {
         console.error(loginError);
         return next(loginError);
       }
-      return res.status(200).send({ success: true, user }); // 쿠키와 함께 응답
+      return res.status(200).send({ success: true, user: user.readonly }); // 쿠키와 함께 응답
     });
   })(req, res, next);
 };
@@ -46,12 +46,14 @@ export const jwtLogin = async (
   res: Response,
   next: NextFunction
 ) => {
-  const { username, password } = req.body;
-  if (!username || !password) {
-    const error = new Error("username and password are required");
+  const { email, password } = req.body;
+  if (!email || !password) {
+    const error = new Error("email and password are required");
     return next(error);
   }
-  const user: IUserDocument | null = await User.findOne({ username });
+  const user: IUserDocument | null = await User.findOne({ email }).select(
+    "_id email username"
+  );
   if (user === null) {
     const error = new Error("not found user");
     return next(error);
@@ -61,7 +63,7 @@ export const jwtLogin = async (
     // JWT Payload 생성
     const payload = {
       id: user._id,
-      username: username,
+      email,
     };
     // JWT Token 생성
     jwt.sign(
