@@ -22,10 +22,16 @@ const storage = (folder: string): multer.StorageEngine => {
     });
   } else {
     try {
-      console.log("Create a folder because there is no uploads folder.");
+      console.log("💾 Create a root uploads folder...");
+      fs.mkdirSync(path.join(__dirname, "..", `uploads`));
+    } catch (error) {
+      console.log("The folder already exists...");
+    }
+    try {
+      console.log(`💾 Create a ${folder} uploads folder...`);
       fs.mkdirSync(path.join(__dirname, "..", `uploads/${folder}`));
     } catch (error) {
-      console.log("file already exists");
+      console.log(`The ${folder} folder already exists...`);
     }
     return multer.diskStorage({
       destination(req, file, cb) {
