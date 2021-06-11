@@ -36,7 +36,7 @@ export const logout = (req: Request, res: Response, next: NextFunction) => {
       console.error(err);
       return next(err);
     }
-    res.clearCookie("connect.sid");
+    res.clearCookie("sid");
     res.status(200).send({ success: true });
   });
 };
