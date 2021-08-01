@@ -1,11 +1,13 @@
-import Server from "./server";
-import socket from "./socketio";
+import Server from './server'
+import socket from './socketio'
 
-const server = new Server();
+const server = new Server()
 
 server
   .start()
   .then((serverListener) => {
-    socket(serverListener, server.app);
+    socket(serverListener, server.app)
   })
-  .catch((err) => console.error(err));
+  .catch((err) => console.error(err))
+
+console.log('hello world')
